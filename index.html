@@ -29,6 +29,9 @@
 </head>
 <body>
 <ul class="allUser"></ul>
+<form action="" class="exitForm">
+<button class="buttonExit">Exit</button>
+</form>
 <form action="" class="formNewUser">
     <input type="text" class="newInputUser">
     <input type="submit">
@@ -44,6 +47,8 @@
 <script src="/socket.io/socket.io.js"></script>
 <script src="http://code.jquery.com/jquery-1.11.1.js"></script>
 <script>
+    'use strict';
+
     var socket = io();
     $('.messForm').submit(function(){
         socket.emit('chat message', $('#m').val());
@@ -52,14 +57,45 @@
         return false;
     });
 
+    $('#m').on('focus', function () {
+        socket.emit('im print');
+    });
+
+    var printInt;
+    socket.on('img yes', function () {
+        var countInterval = 0;
+        printInt = setInterval(function () {
+            countInterval++;
+            console.log(countInterval)
+        }, 100);
+    });
+
+    $('#m').on('blur', function () {
+        socket.emit('im not print');
+    });
+
+    socket.on('img no' , function () {
+        clearInterval(printInt)
+    });
+
     socket.on('obtained message', function (msg) {
         $('#messages').append($('<li>').text(msg));
     });
 
-    socket.on('userAdded', function (newUser) {
-        $('.allUser').append($('<li>').text(newUser));
+    socket.on('userAdded', function (newUser, userID) {
+        $('.allUser').append($('<li>').text(newUser).attr('data-user-id', userID));
     });
 
+    socket.on('userNotForm', function () {
+        $('.formNewUser').fadeOut(1000);
+    });
+
+
+    socket.on('allUSer', function (allUSer) {
+        for(var i = 0; i < allUSer.length; i++) {
+            $('.allUser').append($('<li>').text(allUSer[i]));
+        }
+    });
 
     socket.on('user is byzi', function (name) {
         alert('this name' + name + 'is buzy');
@@ -73,11 +109,39 @@
         return false;
     });
 
-
-
-    socket.on('obtained message', function (msg) {
-        $('#messages').append($('<li>').text(msg));
+    $('.exitForm').submit(function(){
+        socket.emit('disconnect', true);
+        return false;
     });
+
+
+
+    socket.on('exitUser',function (tmp) {
+        $('.allUser').children('li').remove()
+        var users = $('.allUser').children('li');
+        var exitUser = $('.allUser').children('li').text();
+        for(var i = 0; i < users.length; i++) {
+            if(users[i].attr('data-user-id') == tmp) {
+                alert($(users[i].attr('data-user-id', tmp)))
+            }
+        }
+    });
+
+
+
+//    $('.exitForm').on('submit', function () {
+//        socket.emit('disconnect');
+//        return false;
+//    });
+
+
+
+
+
+
+//    socket.on('obtained message', function (msg) {
+//        $('#messages').append($('<li>').text(msg));
+//    });
 
 
 </script>

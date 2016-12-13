@@ -13,20 +13,42 @@ io.on('connection', function(socket){
         io.emit('obtained message', msg);
     });
 
-
-
     socket.on('userName', function (name) {
         if(usersAll[name]) {
             socket.emit('user is byzi', name);
             return;
+        } else {
+            var newUSerId = socket.id;
+            usersAll[name] = socket.id;
+            io.emit('userAdded', name, newUSerId);
+            socket.emit('userNotForm', true);
         }
-        usersAll[name] = name;
-        socket.emit('userAdded', name);
+    });
+
+    socket.on('im print', function () {
+        socket.broadcast.emit('img yes', true)
+    });
+
+    socket.on('im not print', function () {
+        socket.broadcast.emit('img no', true)
     });
 
     socket.on('disconnect', function(){
+        var thisExitUserID = socket.id;
+        for(var key in usersAll) {
+            if(thisExitUserID === usersAll[key]) {
+                io.emit('exitUser', usersAll[key]);
+                delete usersAll[key];
+            }
+        }
         console.log('user disconnected');
     });
+
+    var arrTmp = [];
+    for(var key in usersAll) {
+        arrTmp.push(key);
+    }
+    socket.emit('allUSer', arrTmp);
 });
 
 
